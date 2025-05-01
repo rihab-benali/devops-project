@@ -1,0 +1,10 @@
+flask
+flask_sqlalchemy
+Flask-Migrate
+psycopg2-binary
+flasgger
+flask-bcrypt
+pyjwt
+gunicorn
+requests
+kafka-python

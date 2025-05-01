@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: user-service
+  template:
+    metadata:
+      labels:
+        app: user-service
+    spec:
+      containers:
+        - name: user-service
+          image: devops-project-user-service:latest  # Make sure the image name matches
+          ports:
+            - containerPort: 5000  # The port your service exposes
+          env:
+            - name: DATABASE_URI
+              value: postgresql+psycopg2://rihab:123@user-db:5432/userServiceDb
+            - name: FLASK_APP
+              value: run.py
+            - name: FLASK_ENV
+              value: development
+          command: ["flask", "run", "--host=0.0.0.0"]

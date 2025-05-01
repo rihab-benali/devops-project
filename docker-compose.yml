@@ -1,0 +1,97 @@
+version: '3.8'
+
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+  reservation-service:
+    build: ./reservation-service
+    ports:
+      - "5001:5000"
+    environment:
+      - DATABASE_URI=postgresql+psycopg2://rihab:123@reservation-db:5432/reservationServiceDb
+      - FLASK_APP=run.py
+      - FLASK_ENV=development
+    depends_on:
+      - reservation-db
+      - kafka
+    volumes:
+      - ./reservation-service:/app
+    command: flask run --host=0.0.0.0
+
+  reservation-db:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: rihab
+      POSTGRES_PASSWORD: 123
+      POSTGRES_DB: reservationServiceDb
+    volumes:
+      - reservation_pgdata:/var/lib/postgresql/data
+
+  room-service:
+    build: ./room-service
+    ports:
+      - "5002:5000"
+    environment:
+      - DATABASE_URI=postgresql+psycopg2://rihab:123@room-db:5432/roomServiceDb
+      - FLASK_APP=run.py
+      - FLASK_ENV=development
+    depends_on:
+      - room-db
+      - kafka
+    volumes:
+      - ./room-service:/app
+    command: flask run --host=0.0.0.0
+
+  room-db:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: rihab
+      POSTGRES_PASSWORD: 123
+      POSTGRES_DB: roomServiceDb
+    volumes:
+      - room_pgdata:/var/lib/postgresql/data
+
+  user-service:
+    build: ./user-service
+    ports:
+      - "5003:5000"
+    environment:
+      - DATABASE_URI=postgresql+psycopg2://rihab:123@user-db:5432/userServiceDb
+      - FLASK_APP=run.py
+      - FLASK_ENV=development
+    depends_on:
+      - user-db
+      - kafka
+    volumes:
+      - ./user-service:/app
+    command: flask run --host=0.0.0.0
+
+  user-db:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: rihab
+      POSTGRES_PASSWORD: 123
+      POSTGRES_DB: userServiceDb
+    volumes:
+      - user_pgdata:/var/lib/postgresql/data
+
+volumes:
+  reservation_pgdata:
+  room_pgdata:
+  user_pgdata:

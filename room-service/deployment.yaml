@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: room-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: room-service
+  template:
+    metadata:
+      labels:
+        app: room-service
+    spec:
+      containers:
+        - name: room-service
+          image: room-service:latest
+          ports:
+            - containerPort: 5000
+          env:
+            - name: DATABASE_URI
+              value: postgresql+psycopg2://rihab:123@room-db:5432/roomServiceDb
+            - name: FLASK_APP
+              value: run.py
+            - name: FLASK_ENV
+              value: development
+          command: ["flask", "run", "--host=0.0.0.0"]
