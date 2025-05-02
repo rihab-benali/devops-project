@@ -14,6 +14,6 @@ spec:
     spec:
       containers:
         - name: reservation-service
-          image: reservation-service  # or use a registry path if using Docker Hub
+          image: reservation-service  
           ports:
             - containerPort: 5000
