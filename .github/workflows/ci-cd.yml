@@ -1,32 +1,43 @@
-name: CI/CD Pipeline
+name: Kafka-Zookeeper Docker Setup
 
 on:
   push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+    branches:
+      - main
 
 jobs:
-  build-test-deploy:
+  kafka-zookeeper-setup:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
+    - name: Checkout Repository
       uses: actions/checkout@v3
 
-    - name: Set up Docker Compose
-      run: |
-        docker compose version
+    - name: Set up Docker
+      uses: docker/setup-buildx-action@v2
 
-    - name: Build and run containers
+    - name: Run Docker Compose to Start Zookeeper and Kafka
       run: |
-        docker compose up -d --build
+        docker-compose -f docker-compose.yml up -d
+        sleep 30  # Give it a little time to initialize
 
-    - name: Wait for services to be healthy
+    - name: Get Docker Container IDs for Zookeeper and Kafka
       run: |
-        sleep 30
-        docker ps
+        echo "Zookeeper container ID:"
+        docker ps -q --filter "ancestor=zookeeper"
+        echo "Kafka container ID:"
+        docker ps -q --filter "ancestor=kafka"
 
-    - name: Run tests for service1
+    - name: Check Zookeeper logs
       run: |
-        docker exec service1-container-name pytest
+        ZOOKEEPER_CONTAINER_ID=$(docker ps -q --filter "ancestor=zookeeper")
+        docker logs $ZOOKEEPER_CONTAINER_ID
+
+    - name: Check Kafka logs
+      run: |
+        KAFKA_CONTAINER_ID=$(docker ps -q --filter "ancestor=kafka")
+        docker logs $KAFKA_CONTAINER_ID
+
+    - name: Clean up
+      run: |
+        docker-compose down
