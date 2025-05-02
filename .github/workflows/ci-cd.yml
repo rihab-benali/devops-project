@@ -7,75 +7,26 @@ on:
     branches: [main]
 
 jobs:
-  build-and-test:
+  build-test-deploy:
     runs-on: ubuntu-latest
-
-    services:
-      zookeeper:
-        image: confluentinc/cp-zookeeper:latest
-        ports:
-          - 2181:2181
-        options: >-
-          --health-cmd="echo ruok | nc localhost 2181 || exit 1"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=3
-
-      kafka:
-        image: confluentinc/cp-kafka:latest
-        ports:
-          - 9092:9092
-        env:
-          KAFKA_BROKER_ID: 1
-          KAFKA_ZOOKEEPER_CONNECT: localhost:2181
-          KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
-          KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
-          KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-        options: >-
-          --health-cmd="kafka-topics --bootstrap-server localhost:9092 --list || exit 1"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=3
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.10'
-
-    - name: Install dependencies and run tests (service1)
-      working-directory: ./service1
+    - name: Set up Docker Compose
       run: |
-        pip install -r requirements.txt
-        pytest || echo "Add tests to make this step meaningful"
+        docker compose version
 
-    - name: Build Docker images
+    - name: Build and run containers
       run: |
-        docker compose build
+        docker compose up -d --build
 
-    # Optional: Push to Docker Hub (you can skip this if deploying elsewhere)
-    # - name: Login to Docker Hub
-    #   uses: docker/login-action@v2
-    #   with:
-    #     username: ${{ secrets.DOCKER_USERNAME }}
-    #     password: ${{ secrets.DOCKER_PASSWORD }}
+    - name: Wait for services to be healthy
+      run: |
+        sleep 30
+        docker ps
 
-    # - name: Push images
-    #   run: |
-    #     docker tag service1 yourdockerhub/service1:latest
-    #     docker push yourdockerhub/service1:latest
-
-    # Optional: Deploy to server (e.g., via SSH)
-    # - name: Deploy via SSH
-    #   uses: appleboy/ssh-action@v0.1.10
-    #   with:
-    #     host: ${{ secrets.SERVER_HOST }}
-    #     username: ${{ secrets.SERVER_USER }}
-    #     key: ${{ secrets.SERVER_SSH_KEY }}
-    #     script: |
-    #       cd /path/to/app
-    #       git pull
-    #       docker compose down && docker compose up -d --build
+    - name: Run tests for service1
+      run: |
+        docker exec service1-container-name pytest
