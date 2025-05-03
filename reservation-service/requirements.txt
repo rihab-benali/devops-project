@@ -8,3 +8,4 @@ pyjwt
 gunicorn
 requests
 kafka-python
+flask-cors

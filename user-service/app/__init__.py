@@ -2,6 +2,8 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from app.kafka_consumer import start_consumer
+from flask_cors import CORS
+
 start_consumer()
 
 
@@ -11,6 +13,8 @@ migrate = Migrate()
 def create_app():
     app = Flask(__name__)
     app.config.from_object("config.Config")  # Load config from config.py
+
+    CORS(app, resources={r"/*": {"origins": "*"}})
 
     db.init_app(app)
     migrate.init_app(app, db)  # <-- Required for `flask db` commands

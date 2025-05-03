@@ -1,4 +1,4 @@
-version: '3.8'
+
 
 services:
   zookeeper:
@@ -72,7 +72,7 @@ services:
     ports:
       - "5003:5000"
     environment:
-      - DATABASE_URI=postgresql+psycopg2://rihab:123@user-db:5432/userServiceDb
+      - DATABASE_URI=postgresql+psycopg2://rihab:123@db:5432/userServiceDb
       - FLASK_APP=run.py
       - FLASK_ENV=development
     depends_on:
